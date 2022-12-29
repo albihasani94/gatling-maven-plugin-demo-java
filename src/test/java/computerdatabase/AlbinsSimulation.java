@@ -79,7 +79,12 @@ public class AlbinsSimulation extends Simulation {
     {
         setUp(
             admins.injectOpen(atOnceUsers(1)),
-            users.injectOpen(atOnceUsers(1))
+            users.injectOpen(
+                nothingFor(5),
+                atOnceUsers(1),
+                rampUsers(5).during(10),
+                constantUsersPerSec(2).during(20)
+            )
         ).protocols(httpProtocol);
     }
 }
