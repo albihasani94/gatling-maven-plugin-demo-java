@@ -61,10 +61,16 @@ public class AlbinsSimulation extends Simulation {
             .pause(2)
     );
 
-    private ScenarioBuilder scn = scenario("AlbinsSimulation")
+    private ScenarioBuilder admins = scenario("Admins")
         .exec(searchForComputer, browse, createComputer);
 
+    private ScenarioBuilder users = scenario("Users")
+        .exec(searchForComputer, browse);
+
     {
-        setUp(scn.injectOpen(atOnceUsers(1))).protocols(httpProtocol);
+        setUp(
+            admins.injectOpen(atOnceUsers(1)),
+            users.injectOpen(atOnceUsers(1))
+        ).protocols(httpProtocol);
     }
 }
