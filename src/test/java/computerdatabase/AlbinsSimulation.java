@@ -19,18 +19,25 @@ public class AlbinsSimulation extends Simulation {
         .upgradeInsecureRequestsHeader("1")
         .userAgentHeader("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
 
+    FeederBuilder.Batchable searchFeeder = csv("data/search.csv").random();
+
+    FeederBuilder.Batchable computerFeeder = csv("data/computers.csv").circular();
+
     ChainBuilder searchForComputer =
         exec(
             http("Load home page")
                 .get("/computers")
         )
+            .feed(searchFeeder)
             .exec(
-                http("Search for a computer")
-                    .get("/computers?f=macbook")
+                http("Search computer #{searchCriterion}")
+                    .get("/computers?f=#{searchCriterion}")
+                    .check(css("a:contains('#{searchComputerName}')", "href")
+                        .saveAs("computerURL"))
             )
             .exec(
-                http("Load a specific computer")
-                    .get("/computers/517")
+                http("Load computer #{searchComputerName}")
+                    .get("#{computerURL}")
             )
             .exec(
                 http("Edit specific computer")
@@ -46,13 +53,15 @@ public class AlbinsSimulation extends Simulation {
             http("Load page to create a new computer")
                 .get("/computers/new")
         )
+            .feed(computerFeeder)
             .exec(
-                http("Create a new computer")
+                http("Create computer #{computerName}")
                     .post("/computers")
-                    .formParam("name", "Albin's Computer")
-                    .formParam("introduced", "2022-12-22")
-                    .formParam("discontinued", "2028-12-22")
-                    .formParam("company", "2")
+                    .formParam("name", "#{computerName}")
+                    .formParam("introduced", "#{introduced}")
+                    .formParam("discontinued", "#{discontinued}")
+                    .formParam("company", "#{companyId}")
+                    .check(status().is(200))
             );
 
     ChainBuilder browse = repeat(5, "n").on(
